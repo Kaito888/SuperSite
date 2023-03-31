@@ -1,7 +1,7 @@
 class Polygon {
     constructor(points = [], color = '#6099ff') {
         this.points = points;
-        this.lumen = 1;
+        this.lumen = [];
         this.color = typeof color === 'string' ? this.hexToRgb(color) : color;
         this.center = new Point();
         this.distance = 0;

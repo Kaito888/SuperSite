@@ -16,7 +16,7 @@ Template.prototype.Graph3DTemplate = () => `
         <button id="changeScene">Двигать сцену</button>
         <button class ="deleteButton" id="clearScene">Очистить сцену</button>
     </p>
-    <p id="addFigureDiv" class="hide">
+    <p id="addFigureDiv">
         <select class="dropdown" id="figureSelect">
             <option value="solarSystem">Солнечная система</option>
             <option value="cube">Куб</option>
