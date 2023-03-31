@@ -241,7 +241,6 @@ class Graph3D extends Component {
             })
             document.getElementById('addFigureDiv').classList.remove('hide');
             this.addedAnims = true;
-            console.log(10000001);
         } else if(this.canAnimate) {
             this.sceneAnimations.forEach((anim, i) => {
                 this.scene[i].animations = anim;
