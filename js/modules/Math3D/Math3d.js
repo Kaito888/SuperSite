@@ -200,7 +200,7 @@ class Math3D {
         });
     }
 
-    calcShadow(polygon, figures, light) {
+    calcShadow(polygon, figures, light, index) {
         const M1 = polygon.center;
         const r = polygon.R;
         const s = this.calcVector(M1, light);
@@ -211,7 +211,7 @@ class Math3D {
             for (let j = 0; j < figures[i].polygons.length; j++) {
                 const polygon2 = figures[i].polygons[j];
                 const M0 = polygon2.center;
-                if (polygon.lumen > polygon2.lumen) {
+                if (polygon.lumen[index] > polygon2.lumen[index]) {
                     continue;
                 }
                 const moduleS = this.calcVectorModule(s);
@@ -219,7 +219,7 @@ class Math3D {
                 if (dark < r) {
                     return {
                         isShadow: true,
-                        dark: dark / 2,
+                        dark: dark * 2,
                     };
                 }
             }

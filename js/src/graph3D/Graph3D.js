@@ -12,7 +12,7 @@ class Graph3D extends Component {
         this.canPrintEdges = false;
         this.canPrintPolygons = true;
         this.canChangeScene = true;
-        this.canAnimate = true;
+        this.canAnimate = false;
         this.sceneAnimations = [];
         this.changedFigure = false;
         this.FPS = 0;
@@ -86,9 +86,6 @@ class Graph3D extends Component {
         this.setSolarSystem();
     }
 
-    //figureChangeHandler вызывается дважды (при выборе фигуры)
-    //тени падают на объект, который ближе к источнику света
-
     /* *************** */
     /* about animation */
     /* *************** */
@@ -114,10 +111,26 @@ class Graph3D extends Component {
         this.math3D.calcCenter(earth);
         this.math3D.calcCenter(moon);
 
-        earth.setAnimation('rotateZ', 0.01);
+        /*earth.setAnimation('rotateZ', 0.01);
         earth.setAnimation('rotateZ', 0.01, new Point(0, 0, 0));
 
-        moon.setAnimation('rotateZ', 0.05, earth.center);
+        moon.setAnimation('rotateZ', 0.05, earth.center);*/
+
+        this.scene.forEach(figure => {
+            const animations = [];
+            figure.animations.forEach(anim => {
+                const { method, value, center } = anim;
+                if (value != 0) {
+                    animations.push({
+                        method: method,
+                        value: value,
+                        center: center,
+                    })
+                }
+            })
+            this.sceneAnimations.push(animations);
+            figure.dropAnimation();
+        })
 
         if (this.scene.length != 0) {
             this.scene[this.scene.length - 1] = new Figure();
@@ -125,6 +138,26 @@ class Graph3D extends Component {
         this.scene.push(earth);
         this.scene.push(moon);
         this.scene.push(new Figure());
+
+        const animationsE = [];
+        animationsE.push({
+            method: 'rotateZ',
+            value: 0.01,
+            center: earth.center,
+        });
+        animationsE.push({
+            method: 'rotateZ',
+            value: 0.01,
+            center: new Point(),
+        });
+        this.sceneAnimations[this.scene.length - 3] = animationsE;
+        const animationsM = [];
+        animationsM.push({
+            method: 'rotateZ',
+            value: 0.01,
+            center: earth.center,
+        });
+        this.sceneAnimations[this.scene.length - 2] = animationsM;
     }
 
     setAnimation() {
@@ -181,56 +214,6 @@ class Graph3D extends Component {
         this.sceneAnimations[this.sceneAnimations.length - 1] = animations;
     }
 
-    /*doAnimation(figure) {
-        if (!figure.animated) {
-            figure.doAnimation(this.math3D);
-            figure.children.forEach(child => {
-                let animCount = 0;
-                figure.animations.forEach(anim => {
-                    const { method, value, center } = anim;
-                    if (center != figure.center) {
-                        this.scene[child].setAnimation(method, value, center);
-                        animCount++;
-                    }
-                })
-                this.doAnimation(this.scene[child]);
-                for (let i = 0; i < animCount; i++) {
-                    this.scene[child].animations[this.scene[child].animations.length - i - 1].value = 0;
-                }
-            })
-            figure.animated = true;
-        }
-    }
-
-    canDoAnimation() {
-        this.canAnimate = document.getElementById('doAnimation').checked;
-        if (!this.canAnimate) {
-            this.scene.forEach(figure => {
-                const animations = [];
-                figure.animations.forEach(anim => {
-                    const { method, value, center } = anim;
-                    if (value != 0) {
-                        animations.push({
-                            method: method,
-                            value: value,
-                            center: center,
-                        })
-                    }
-                })
-                this.sceneAnimations.push(animations);
-                figure.dropAnimation();
-            })
-            document.getElementById('addFigureDiv').classList.remove('hide');
-        } else {
-            this.sceneAnimations.forEach((anim, i) => {
-                this.scene[i].animations = anim;
-            })
-            this.sceneAnimations = [];
-            document.getElementById('addFigureDiv').classList.add('hide');
-        }
-        console.log(this.scene);
-    }*/
-
     doAnimation(figure) {
         if (!figure.animated) {
             figure.doAnimation(this.math3D);
@@ -279,7 +262,6 @@ class Graph3D extends Component {
             this.sceneAnimations = [];
             document.getElementById('addFigureDiv').classList.add('hide');
         }
-        console.log(this.scene, this.sceneAnimations);
     }
 
     /* ************** */
@@ -298,13 +280,11 @@ class Graph3D extends Component {
         this.scene = [];
 
         this.canAnimate = false;
-        //this.doAnimation();
     }
 
     addFigure = () => {
         this.setAnimation();
         this.scene.push(new Figure());
-        console.log(this.scene);
         document.getElementById('figureSettings').classList.add('hide');
         document.querySelectorAll('.figureAnimCenter').forEach(elem => elem.value = '');
     }
@@ -331,12 +311,10 @@ class Graph3D extends Component {
 
     figureChangeHandler = (event) => {
         if (!this.changedFigure) {
-            console.log(1111);
             let figure = new Figure();
             const type = event.target.value;
             switch (type) {
                 case 'solarSystem': {
-                    console.log(10001);
                     this.setSolarSystem();
                     document.getElementById('figureSettings').classList.add('hide');
                     break;
@@ -419,7 +397,6 @@ class Graph3D extends Component {
             document.querySelectorAll('.figureParam').forEach(elem => elem.value = '');
 
             this.canChangeScene = false;
-            console.log(this.scene);
 
             this.changedFigure = true;
         }
@@ -633,14 +610,23 @@ class Graph3D extends Component {
 
                 figure.polygons.forEach(poly => polygons.push(poly));
             })
-
             this.math3D.sortByArtistAlgorythm(polygons);
+
+            polygons.forEach(polygon => {
+                this.LIGHT.forEach((light, i) => {
+                    const distance = Math.sqrt(Math.pow(light.x - polygon.center.x, 2) +
+                        Math.pow(light.y - polygon.center.y, 2) +
+                        Math.pow(light.z - polygon.center.z, 2));
+                    polygon.lumen[i] = this.math3D.calcIllumination(distance, light.lumen);
+                })
+            })
+
             polygons.forEach(polygon => {
                 if (polygon.visible) {
                     let { r, g, b } = polygon.color;
                     let R = 0, G = 0, B = 0;
 
-                    this.LIGHT.forEach(light => {
+                    this.LIGHT.forEach((light, i) => {
                         const rLight = light.color.r;
                         const gLight = light.color.g;
                         const bLight = light.color.b;
@@ -648,8 +634,7 @@ class Graph3D extends Component {
                             Math.pow(light.y - polygon.center.y, 2) +
                             Math.pow(light.z - polygon.center.z, 2));
 
-                        polygon.lumen = this.math3D.calcIllumination(distance, light.lumen);
-                        const { isShadow, dark } = this.canPrintShadows ? this.math3D.calcShadow(polygon, this.scene, light) : { isShadow: false, dark: 1 };
+                        const { isShadow, dark } = this.canPrintShadows ? this.math3D.calcShadow(polygon, this.scene, light, i) : { isShadow: false, dark: 1 };
                         const lumen = this.math3D.calcIllumination(distance, light.lumen * (isShadow ? dark : 1));
 
                         R += Math.round(r * lumen + rLight * lumen);
@@ -732,6 +717,6 @@ class Graph3D extends Component {
         document.getElementById('addFigure').addEventListener('click', this.addFigure);
 
         document.getElementById('doAnimation').addEventListener('click', () => this.canDoAnimation());
-        document.getElementById('doAnimation').checked = true;
+        //document.getElementById('doAnimation').checked = true;
     }
 }
