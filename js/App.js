@@ -8,7 +8,7 @@ class App extends Component {
         this.roots = new Roots({ id: 'roots', parent: this.id, template: template.RootsTemplate });
         this.rpg = new RPG({ id: 'rpg', parent: this.id, template: template.RPGTemplate });
         this.humans = new Humans({ id: 'humans', parent: this.id, template: template.HumansTemplate });
-        this.graph2D = new Graph2D({ id: 'graph', parent: this.id, template: template.Graph2DTemplate });
+        this.graph2D = new Graph2D({ id: 'graph2D', parent: this.id, template: template.Graph2DTemplate });
         this.graph3D = new Graph3D({ id: 'graph3D', parent: this.id, template: template.Graph3DTemplate });
         this.calculator = new UniCalculator({ id: 'calculator', parent: this.id, template: template.UniCalculatorTemplate });
         this.polyCalculator = new PolyCalculator({ id: 'polyCalculator', parent: this.id, template: template.PolyCalculatorTemplate });

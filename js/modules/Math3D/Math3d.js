@@ -126,7 +126,9 @@ class Math3D {
             z += point.z;
         })
         const s = figure.points.length;
-        figure.center = new Point(x / s, y / s, z / s);
+        figure.center.x = x / s;
+        figure.center.y = y / s;
+        figure.center.z = z / s;
     }
 
     calcCenters(figure) {

@@ -87,11 +87,7 @@ class Graph3D extends Component {
         this.setSolarSystem();
     }
 
-    //сделать чтобы меню не уезжало когда листается вниз
     //вынести функционал в компоненту
-    //фигуре в анимации задавать потомков, которые перемещаются вместе с ней
-    //анимация с фигурой - такая же с её потомками - отдельная анимация потомков - тд
-    //вся анимация через doAnimation у фигуры
     //отдельна кнопка конструктор в которую положить добавление фигур и настройки
     //управление источниками света
 
@@ -101,14 +97,18 @@ class Graph3D extends Component {
 
     setSolarSystem() {
         this.LIGHT = [(new Light(0, 0, 0, 500, '#ffdd00'))];
-        const earth = new Torus(30, 2, 2, 0.8);
-        const moon = new Cube(1, 1, 1);
+        /*const earth = new Torus(30, 2, 2, 0.8);
+        const moon = new Cube(1, 1, 1);*/
+        const earth = new Sphere(30, 3);
+        const moon = new Torus(30, 1.5, 1.5, 0.5);
 
         earth.points.forEach(point => {
             point.x += 15;
         });
+        const matrix = this.math3D.rotateZ(250);
         moon.points.forEach(point => {
-            point.x += 20;
+            this.math3D.transform(matrix, point);
+            point.x += 21;
         });
         earth.children.push(this.scene.length + 1);
 
@@ -491,8 +491,6 @@ class Graph3D extends Component {
         const color = document.getElementById('figureColor').value;
         if (color) this.figureColorChange(color);
 
-        figure.polygons.forEach(poly => poly.figureIndex = this.scene.length - 1);
-
         this.scene[this.scene.length - 1] = figure;
     }
 
@@ -577,6 +575,7 @@ class Graph3D extends Component {
                 this.math3D.calcDistance(figure, this.WIN.camera, 'distance');
 
                 if (figure.constructor.name === ('Sphere' || 'Ellipsoid')) {
+                    this.math3D.calcCenter(figure);
                     this.math3D.changePolygonVisiblity(figure);
                 }
 
@@ -597,6 +596,7 @@ class Graph3D extends Component {
                             Math.pow(light.y - polygon.center.y, 2) +
                             Math.pow(light.z - polygon.center.z, 2));
 
+                        polygon.lumen = this.math3D.calcIllumination(distance, light.lumen);
                         const { isShadow, dark } = this.canPrintShadows ? this.math3D.calcShadow(polygon, this.scene, light) : { isShadow: false, dark: 1 };
                         const lumen = this.math3D.calcIllumination(distance, light.lumen * (isShadow ? dark : 1));
 
@@ -612,7 +612,7 @@ class Graph3D extends Component {
                     const points = [];
                     polygon.points.forEach(num => {
                         points.push(scene[polygon.figureIndex].points[num])
-                    } );
+                    });
                     this.canvas.polygon(
                         points.map(point => {
                             return {
