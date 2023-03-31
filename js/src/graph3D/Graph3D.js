@@ -14,6 +14,7 @@ class Graph3D extends Component {
         this.canChangeScene = true;
         this.canAnimate = true;
         this.sceneAnimations = [];
+        this.changedFigure = false;
         this.FPS = 0;
 
         this.WIN = {
@@ -81,14 +82,12 @@ class Graph3D extends Component {
         }
         animLoop();
 
-        document.getElementById('doAnimation').addEventListener('click', () => this.canDoAnimation());
         this.addEventListeners();
         this.setSolarSystem();
     }
 
-    //вынести функционал в компоненту
-    //отдельна кнопка конструктор в которую положить добавление фигур и настройки
-    //управление источниками света
+    //figureChangeHandler вызывается дважды (при выборе фигуры)
+    //тени падают на объект, который ближе к источнику света
 
     /* *************** */
     /* about animation */
@@ -129,8 +128,6 @@ class Graph3D extends Component {
     }
 
     setAnimation() {
-        const figure = this.scene[this.scene.length - 1];
-
         const rotateX = document.getElementById('rotateXValue').value - 0;
         let xx = document.getElementById('rotateXCenterX').value;
         let xy = document.getElementById('rotateXCenterY').value;
@@ -163,7 +160,6 @@ class Graph3D extends Component {
             x = x === '' ? '' : x - 0;
             y = y === '' ? '' : y - 0;
             z = z === '' ? '' : z - 0;
-            figure.setAnimation('zoom', zoom, new Point(x, y, z));
         }
 
         const animations = [];
@@ -185,7 +181,7 @@ class Graph3D extends Component {
         this.sceneAnimations[this.sceneAnimations.length - 1] = animations;
     }
 
-    doAnimation(figure) {
+    /*doAnimation(figure) {
         if (!figure.animated) {
             figure.doAnimation(this.math3D);
             figure.children.forEach(child => {
@@ -233,7 +229,7 @@ class Graph3D extends Component {
             document.getElementById('addFigureDiv').classList.add('hide');
         }
         console.log(this.scene);
-    }
+    }*/
 
     doAnimation(figure) {
         if (!figure.animated) {
@@ -254,6 +250,7 @@ class Graph3D extends Component {
             })
             figure.animated = true;
         }
+        this.changedFigure = false;
     }
 
     canDoAnimation() {
@@ -307,6 +304,7 @@ class Graph3D extends Component {
     addFigure = () => {
         this.setAnimation();
         this.scene.push(new Figure());
+        console.log(this.scene);
         document.getElementById('figureSettings').classList.add('hide');
         document.querySelectorAll('.figureAnimCenter').forEach(elem => elem.value = '');
     }
@@ -332,92 +330,99 @@ class Graph3D extends Component {
     /* ************************** */
 
     figureChangeHandler = (event) => {
-        let figure = new Figure();
-        const type = event.target.value;
-        switch (type) {
-            case 'solarSystem': {
-                this.setSolarSystem();
-                document.getElementById('figureSettings').classList.add('hide');
-                break;
+        if (!this.changedFigure) {
+            console.log(1111);
+            let figure = new Figure();
+            const type = event.target.value;
+            switch (type) {
+                case 'solarSystem': {
+                    console.log(10001);
+                    this.setSolarSystem();
+                    document.getElementById('figureSettings').classList.add('hide');
+                    break;
+                }
+                case 'cube': {
+                    figure = new Cube();
+                    this.figureChangeParamsVisiblity(0);
+                    break;
+                }
+                case 'sphere': {
+                    figure = new Sphere();
+                    this.figureChangeParamsVisiblity(1);
+                    break;
+                }
+                case 'ellipsoid': {
+                    figure = new Ellipsoid();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
+                case 'cone': {
+                    figure = new Cone();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
+                case 'hyperboloid1': {
+                    figure = new Hyperboloid1();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
+                case 'hyperboloid2': {
+                    figure = new Hyperboloid2();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
+                case 'paraboloidHyp': {
+                    figure = new ParaboloidHyp();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
+                case 'paraboloidEll': {
+                    figure = new ParaboloidEll();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
+                case 'cylinderEll': {
+                    figure = new CylinderEll();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
+                case 'cylinderHyp': {
+                    figure = new CylinderHyp();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
+                case 'cylinderPar': {
+                    figure = new CylinderPar();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
+                case 'torus': {
+                    figure = new Torus();
+                    this.figureChangeParamsVisiblity(3);
+                    break;
+                }
             }
-            case 'cube': {
-                figure = new Cube();
-                this.figureChangeParamsVisiblity(0);
-                break;
+
+            if (type != 'solarSystem') {
+                if (this.scene.length != 0)
+                    this.scene[this.scene.length - 1] = figure;
+                else this.scene.push(figure);
+                document.getElementById('figureSettings').classList.remove('hide');
             }
-            case 'sphere': {
-                figure = new Sphere();
-                this.figureChangeParamsVisiblity(1);
-                break;
-            }
-            case 'ellipsoid': {
-                figure = new Ellipsoid();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
-            case 'cone': {
-                figure = new Cone();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
-            case 'hyperboloid1': {
-                figure = new Hyperboloid1();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
-            case 'hyperboloid2': {
-                figure = new Hyperboloid2();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
-            case 'paraboloidHyp': {
-                figure = new ParaboloidHyp();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
-            case 'paraboloidEll': {
-                figure = new ParaboloidEll();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
-            case 'cylinderEll': {
-                figure = new CylinderEll();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
-            case 'cylinderHyp': {
-                figure = new CylinderHyp();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
-            case 'cylinderPar': {
-                figure = new CylinderPar();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
-            case 'torus': {
-                figure = new Torus();
-                this.figureChangeParamsVisiblity(3);
-                break;
-            }
+
+            const count = document.getElementById('figureCount').value - 0;
+            if (count) this.figureCountChange(count);
+
+            const color = document.getElementById('figureColor').value;
+            if (color) this.figureColorChange(color);
+
+            document.querySelectorAll('.figureParam').forEach(elem => elem.value = '');
+
+            this.canChangeScene = false;
+            console.log(this.scene);
+
+            this.changedFigure = true;
         }
-
-        if (type != 'solarSystem') {
-            if (this.scene.length != 0)
-                this.scene[this.scene.length - 1] = figure;
-            else this.scene.push(figure);
-            document.getElementById('figureSettings').classList.remove('hide');
-        }
-
-        const count = document.getElementById('figureCount').value - 0;
-        if (count) this.figureCountChange(count);
-
-        const color = document.getElementById('figureColor').value;
-        if (color) this.figureColorChange(color);
-
-        document.querySelectorAll('.figureParam').forEach(elem => elem.value = '');
-
-        this.canChangeScene = false;
     }
 
     figureChangeParamsVisiblity(num) {
@@ -726,6 +731,7 @@ class Graph3D extends Component {
 
         document.getElementById('addFigure').addEventListener('click', this.addFigure);
 
+        document.getElementById('doAnimation').addEventListener('click', () => this.canDoAnimation());
         document.getElementById('doAnimation').checked = true;
     }
 }
