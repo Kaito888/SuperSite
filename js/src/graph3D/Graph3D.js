@@ -29,7 +29,6 @@ class Graph3D extends Component {
             /*new Light(10, -20, -10, 5000, '#0000ff'),*/
         ];
 
-        this.solarSystem = new Figure();
         this.scene = [];
 
         this.canvas = new Canvas({
@@ -97,8 +96,6 @@ class Graph3D extends Component {
 
     setSolarSystem() {
         this.LIGHT = [(new Light(0, 0, 0, 500, '#ffdd00'))];
-        /*const earth = new Torus(30, 2, 2, 0.8);
-        const moon = new Cube(1, 1, 1);*/
         const earth = new Sphere(30, 3);
         const moon = new Torus(30, 1.5, 1.5, 0.5);
 
@@ -235,6 +232,57 @@ class Graph3D extends Component {
             this.sceneAnimations = [];
             document.getElementById('addFigureDiv').classList.add('hide');
         }
+        console.log(this.scene);
+    }
+
+    doAnimation(figure) {
+        if (!figure.animated) {
+            figure.doAnimation(this.math3D);
+            figure.children.forEach(child => {
+                let animCount = 0;
+                figure.animations.forEach(anim => {
+                    const { method, value, center } = anim;
+                    if (center != figure.center) {
+                        this.scene[child].setAnimation(method, value, center);
+                        animCount++;
+                    }
+                })
+                this.doAnimation(this.scene[child]);
+                for (let i = 0; i < animCount; i++) {
+                    this.scene[child].animations[this.scene[child].animations.length - i - 1].value = 0;
+                }
+            })
+            figure.animated = true;
+        }
+    }
+
+    canDoAnimation() {
+        this.canAnimate = document.getElementById('doAnimation').checked;
+        if (!this.canAnimate) {
+            this.scene.forEach(figure => {
+                const animations = [];
+                figure.animations.forEach(anim => {
+                    const { method, value, center } = anim;
+                    if (value != 0) {
+                        animations.push({
+                            method: method,
+                            value: value,
+                            center: center,
+                        })
+                    }
+                })
+                this.sceneAnimations.push(animations);
+                figure.dropAnimation();
+            })
+            document.getElementById('addFigureDiv').classList.remove('hide');
+        } else {
+            this.sceneAnimations.forEach((anim, i) => {
+                this.scene[i].animations = anim;
+            })
+            this.sceneAnimations = [];
+            document.getElementById('addFigureDiv').classList.add('hide');
+        }
+        console.log(this.scene, this.sceneAnimations);
     }
 
     /* ************** */
@@ -251,10 +299,9 @@ class Graph3D extends Component {
             new Light(10, -20, -10, 5000, '#0000ff'),
         ];
         this.scene = [];
-        this.solarSystem = new Figure();
 
         this.canAnimate = false;
-        this.doAnimation();
+        //this.doAnimation();
     }
 
     addFigure = () => {
@@ -354,8 +401,6 @@ class Graph3D extends Component {
                 break;
             }
         }
-
-        figure.polygons.forEach(poly => poly.figureIndex = this.scene.length - 1);
 
         if (type != 'solarSystem') {
             if (this.scene.length != 0)
@@ -490,6 +535,8 @@ class Graph3D extends Component {
         }
         const color = document.getElementById('figureColor').value;
         if (color) this.figureColorChange(color);
+
+        figure.polygons.forEach(poly => poly.figureIndex = this.scene.length - 1);
 
         this.scene[this.scene.length - 1] = figure;
     }
