@@ -117,11 +117,6 @@ class Graph3D extends Component {
         this.math3D.calcCenter(earth);
         this.math3D.calcCenter(moon);
 
-        earth.setAnimation('rotateZ', 0.01);
-        earth.setAnimation('rotateZ', 0.01, new Point(0, 0, 0));
-
-        moon.setAnimation('rotateZ', 0.05, earth.center);
-
         if (this.scene.length != 0) {
             this.scene[this.scene.length - 1] = new Figure();
         }
