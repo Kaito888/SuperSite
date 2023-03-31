@@ -117,21 +117,10 @@ class Graph3D extends Component {
         this.math3D.calcCenter(earth);
         this.math3D.calcCenter(moon);
 
-        this.scene.forEach(figure => {
-            const animations = [];
-            figure.animations.forEach(anim => {
-                const { method, value, center } = anim;
-                if (value != 0) {
-                    animations.push({
-                        method: method,
-                        value: value,
-                        center: center,
-                    })
-                }
-            })
-            this.sceneAnimations.push(animations);
-            figure.dropAnimation();
-        })
+        earth.setAnimation('rotateZ', 0.01);
+        earth.setAnimation('rotateZ', 0.01, new Point(0, 0, 0));
+
+        moon.setAnimation('rotateZ', 0.05, earth.center);
 
         if (this.scene.length != 0) {
             this.scene[this.scene.length - 1] = new Figure();
@@ -266,7 +255,6 @@ class Graph3D extends Component {
             document.getElementById('addFigureDiv').classList.add('hide');
             this.addedAnims = false;
         }
-        console.log(this.scene, this.sceneAnimations);
     }
 
     /* ************** */
