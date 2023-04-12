@@ -14,13 +14,13 @@ class App extends Component {
         this.polyCalculator = new PolyCalculator({ id: 'polyCalculator', parent: this.id, template: template.PolyCalculatorTemplate });
         this.BGpopUp = new Background({ id: 'BGpopUp', parent: this.id, template: template.BackgroundTemplate });
 
+        this.essay.hide();
         this.oneShot.hide();
         this.multyShot.hide();
         this.roots.hide();
         this.rpg.hide();
         this.humans.hide();
         this.graph2D.hide();
-        this.graph3D.hide();
         this.calculator.hide();
         this.polyCalculator.hide();
         this.BGpopUp.hide();

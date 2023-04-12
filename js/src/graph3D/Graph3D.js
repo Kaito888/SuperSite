@@ -1,6 +1,8 @@
 class Graph3D extends Component {
     constructor(props) {
         super(props);
+        this.figureSettings = new FigureSettings({id: 'figureSettings', parent: 'figureSettingsDiv', template: template.FigureSettingsTemplate});
+        this.figureSettings.hide();
 
         this.zoom = 0.8;
         this.rotate = 0.01;
@@ -91,6 +93,12 @@ class Graph3D extends Component {
         this.addEventListeners();
         this.setSolarSystem();
     }
+
+    //генерация компонент
+    //check whats wrong with animation (isnt setting for some figures)
+    //rewrite some figures into not spherical system
+    //figure out why events r bein called twice
+    //множества оптимального управления
 
     /* *************** */
     /* about animation */
@@ -273,7 +281,7 @@ class Graph3D extends Component {
     addFigure = () => {
         this.setAnimation();
         this.scene.push(new Figure());
-        document.getElementById('figureSettings').classList.add('hide');
+        this.figureSettings.hide();
         document.querySelectorAll('.figureAnimCenter').forEach(elem => elem.value = '');
     }
 
@@ -304,7 +312,7 @@ class Graph3D extends Component {
             switch (type) {
                 case 'solarSystem': {
                     this.setSolarSystem();
-                    document.getElementById('figureSettings').classList.add('hide');
+                    this.figureSettings.hide();
                     break;
                 }
                 case 'cube': {
@@ -373,7 +381,7 @@ class Graph3D extends Component {
                 if (this.scene.length != 0)
                     this.scene[this.scene.length - 1] = figure;
                 else this.scene.push(figure);
-                document.getElementById('figureSettings').classList.remove('hide');
+                this.figureSettings.show();
             }
 
             const count = document.getElementById('figureCount').value - 0;
