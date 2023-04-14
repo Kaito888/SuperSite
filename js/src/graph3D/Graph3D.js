@@ -86,9 +86,6 @@ class Graph3D extends Component {
         this.setSolarSystem();
     }
 
-    //figureChangeHandler вызывается дважды (при выборе фигуры)
-    //тени падают на объект, который ближе к источнику света
-
     /* *************** */
     /* about animation */
     /* *************** */
@@ -181,56 +178,6 @@ class Graph3D extends Component {
         this.sceneAnimations[this.sceneAnimations.length - 1] = animations;
     }
 
-    /*doAnimation(figure) {
-        if (!figure.animated) {
-            figure.doAnimation(this.math3D);
-            figure.children.forEach(child => {
-                let animCount = 0;
-                figure.animations.forEach(anim => {
-                    const { method, value, center } = anim;
-                    if (center != figure.center) {
-                        this.scene[child].setAnimation(method, value, center);
-                        animCount++;
-                    }
-                })
-                this.doAnimation(this.scene[child]);
-                for (let i = 0; i < animCount; i++) {
-                    this.scene[child].animations[this.scene[child].animations.length - i - 1].value = 0;
-                }
-            })
-            figure.animated = true;
-        }
-    }
-
-    canDoAnimation() {
-        this.canAnimate = document.getElementById('doAnimation').checked;
-        if (!this.canAnimate) {
-            this.scene.forEach(figure => {
-                const animations = [];
-                figure.animations.forEach(anim => {
-                    const { method, value, center } = anim;
-                    if (value != 0) {
-                        animations.push({
-                            method: method,
-                            value: value,
-                            center: center,
-                        })
-                    }
-                })
-                this.sceneAnimations.push(animations);
-                figure.dropAnimation();
-            })
-            document.getElementById('addFigureDiv').classList.remove('hide');
-        } else {
-            this.sceneAnimations.forEach((anim, i) => {
-                this.scene[i].animations = anim;
-            })
-            this.sceneAnimations = [];
-            document.getElementById('addFigureDiv').classList.add('hide');
-        }
-        console.log(this.scene);
-    }*/
-
     doAnimation(figure) {
         if (!figure.animated) {
             figure.doAnimation(this.math3D);
@@ -298,7 +245,6 @@ class Graph3D extends Component {
         this.scene = [];
 
         this.canAnimate = false;
-        //this.doAnimation();
     }
 
     addFigure = () => {
@@ -633,14 +579,23 @@ class Graph3D extends Component {
 
                 figure.polygons.forEach(poly => polygons.push(poly));
             })
-
             this.math3D.sortByArtistAlgorythm(polygons);
+
+            polygons.forEach(polygon => {
+                this.LIGHT.forEach((light, i) => {
+                    const distance = Math.sqrt(Math.pow(light.x - polygon.center.x, 2) +
+                        Math.pow(light.y - polygon.center.y, 2) +
+                        Math.pow(light.z - polygon.center.z, 2));
+                    polygon.lumen[i] = this.math3D.calcIllumination(distance, light.lumen);
+                })
+            })
+
             polygons.forEach(polygon => {
                 if (polygon.visible) {
                     let { r, g, b } = polygon.color;
                     let R = 0, G = 0, B = 0;
 
-                    this.LIGHT.forEach(light => {
+                    this.LIGHT.forEach((light, i) => {
                         const rLight = light.color.r;
                         const gLight = light.color.g;
                         const bLight = light.color.b;
@@ -648,8 +603,7 @@ class Graph3D extends Component {
                             Math.pow(light.y - polygon.center.y, 2) +
                             Math.pow(light.z - polygon.center.z, 2));
 
-                        polygon.lumen = this.math3D.calcIllumination(distance, light.lumen);
-                        const { isShadow, dark } = this.canPrintShadows ? this.math3D.calcShadow(polygon, this.scene, light) : { isShadow: false, dark: 1 };
+                        const { isShadow, dark } = this.canPrintShadows ? this.math3D.calcShadow(polygon, this.scene, light, i) : { isShadow: false, dark: 1 };
                         const lumen = this.math3D.calcIllumination(distance, light.lumen * (isShadow ? dark : 1));
 
                         R += Math.round(r * lumen + rLight * lumen);
