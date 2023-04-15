@@ -117,33 +117,31 @@ class Roots extends Component {
                 const { left, bottom, height, width } = WIN;
 
                 for (var x = 0; x < left + width; x += 1) {
-                    canvas.line(x, bottom, x, (bottom + height), 'white');
+                    canvas.line(x, bottom, x, -(bottom + height), 'white');
                 }
                 for (var x = 0; x > left; x -= 1) {
-                    canvas.line(x, bottom, x, (bottom + height), 'white');
+                    canvas.line(x, bottom, x, -(bottom + height), 'white');
                 }
                 for (var y = 0; y < bottom + height; y += 1) {
-                    canvas.line(left, y, left + width, y, 'white');
+                    canvas.line(left, y, left + width, -y, 'white');
                 }
                 for (var y = 0; y > bottom; y -= 1) {
-                    canvas.line(left, y, left + width, y, 'white');
+                    canvas.line(left, y, left + width, -y, 'white');
                 }
 
                 canvas.line(left, 0, width + left, 0, '#1A224B', 2);//оси
-                canvas.line(0, bottom, 0, (bottom + height), '#1A224B', 2);
+                canvas.line(0, bottom, 0, -(bottom + height), '#1A224B', 2);
 
-                canvas.line(0, bottom + height, 1, bottom + height - 1, '#1A224B', 2);//стрелочки
-                canvas.line(0, bottom + height, -1, bottom + height - 1, '#1A224B', 2);
+                canvas.line(0, bottom, 1, -(bottom + 1), '#1A224B', 2);//стрелочки
+                canvas.line(0, bottom, -1, -(bottom + 1), '#1A224B', 2);
 
                 canvas.line(left + width, 0, left + width - 1, -1, '#1A224B', 2);
                 canvas.line(left + width, 0, left + width - 1, 1, '#1A224B', 2);
 
                 //подписи осей и центра
                 canvas.text('x', left + width - 0.7, -1);
-                canvas.text('y', 1, height + bottom - 0.7);
+                canvas.text('y', 1, bottom + 0.7);
                 canvas.text('0', -0.5, 0.8);
-
-                canvas.render();
             }
 
             function render(f) {
@@ -151,8 +149,6 @@ class Roots extends Component {
                 printOXY();
 
                 printFunction(f);
-
-                canvas.render();
             }
 
             function printFunction(f) {
@@ -163,9 +159,9 @@ class Roots extends Component {
                     const y1 = f(x);
                     const y2 = f(x + dx);
                     if (Math.abs(y2 - y1) < WIN.height) {
-                        canvas.line(x, y1, x + dx, y2, 'blue', 1);
+                        canvas.line(x, -y1, x + dx, y2, 'blue', 1);
                     } else {
-                        canvas.line(x, y1, x + dx, y2, 'blue', 1, true);
+                        canvas.line(x, -y1, x + dx, y2, 'blue', 1, true);
                     }
                     x += dx;
                 }

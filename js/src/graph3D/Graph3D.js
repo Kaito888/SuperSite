@@ -1,8 +1,6 @@
 class Graph3D extends Component {
     constructor(props) {
         super(props);
-        this.figureSettings = new FigureSettings({id: 'figureSettings', parent: 'figureSettingsDiv', template: template.FigureSettingsTemplate});
-        this.figureSettings.hide();
 
         this.zoom = 0.8;
         this.rotate = 0.01;
@@ -14,10 +12,8 @@ class Graph3D extends Component {
         this.canPrintEdges = false;
         this.canPrintPolygons = true;
         this.canChangeScene = true;
-        this.canAnimate = false;
+        this.canAnimate = true;
         this.sceneAnimations = [];
-        this.changedFigure = false;
-        this.addedAnims = false;
         this.FPS = 0;
 
         this.WIN = {
@@ -30,9 +26,10 @@ class Graph3D extends Component {
         };
         this.LIGHT = [
             new Light(-10, 20, 0, 8000, '#ff0000'),
-            new Light(10, -20, -10, 5000, '#0000ff'),
+            /*new Light(10, -20, -10, 5000, '#0000ff'),*/
         ];
 
+        this.solarSystem = new Figure();
         this.scene = [];
 
         this.canvas = new Canvas({
@@ -50,11 +47,6 @@ class Graph3D extends Component {
             }
         });
         this.math3D = new Math3D({ WIN: this.WIN });
-
-        this.ui3D = new UI3D({
-            figureCountChange: this.figureCountChange,
-            figureColorChange: this.figureColorChange,
-        })
 
         setInterval(() => {
             this.scene.forEach(figure => {
@@ -90,9 +82,18 @@ class Graph3D extends Component {
         }
         animLoop();
 
+        document.getElementById('doAnimation').addEventListener('click', () => this.canDoAnimation());
         this.addEventListeners();
         this.setSolarSystem();
     }
+
+    //сделать чтобы меню не уезжало когда листается вниз
+    //вынести функционал в компоненту
+    //фигуре в анимации задавать потомков, которые перемещаются вместе с ней
+    //анимация с фигурой - такая же с её потомками - отдельная анимация потомков - тд
+    //вся анимация через doAnimation у фигуры
+    //отдельна кнопка конструктор в которую положить добавление фигур и настройки
+    //управление источниками света
 
     /* *************** */
     /* about animation */
@@ -100,24 +101,24 @@ class Graph3D extends Component {
 
     setSolarSystem() {
         this.LIGHT = [(new Light(0, 0, 0, 500, '#ffdd00'))];
-        const earth = new Sphere(30, 3);
-        const moon = new Torus(30, 1.5, 1.5, 0.5);
+        const earth = new Torus(30, 2, 2, 0.8);
+        const moon = new Cube(1, 1, 1);
 
         earth.points.forEach(point => {
             point.x += 15;
         });
-        const matrix = this.math3D.rotateZ(250);
         moon.points.forEach(point => {
-            this.math3D.transform(matrix, point);
-            point.x += 21;
+            point.x += 20;
         });
         earth.children.push(this.scene.length + 1);
 
-        earth.polygons.forEach(poly => poly.figureIndex = this.scene.length);
-        moon.polygons.forEach(poly => poly.figureIndex = this.scene.length + 1);
-
         this.math3D.calcCenter(earth);
         this.math3D.calcCenter(moon);
+
+        earth.setAnimation('rotateZ', 0.01);
+        earth.setAnimation('rotateZ', 0.01, new Point(0, 0, 0));
+
+        moon.setAnimation('rotateZ', 0.05, earth.center);
 
         if (this.scene.length != 0) {
             this.scene[this.scene.length - 1] = new Figure();
@@ -125,29 +126,11 @@ class Graph3D extends Component {
         this.scene.push(earth);
         this.scene.push(moon);
         this.scene.push(new Figure());
-
-        const animationsE = [];
-        animationsE.push({
-            method: 'rotateZ',
-            value: 0.01,
-            center: earth.center,
-        });
-        animationsE.push({
-            method: 'rotateZ',
-            value: 0.01,
-            center: new Point(),
-        });
-        this.sceneAnimations[this.scene.length - 3] = animationsE;
-        const animationsM = [];
-        animationsM.push({
-            method: 'rotateZ',
-            value: 0.01,
-            center: earth.center,
-        });
-        this.sceneAnimations[this.scene.length - 2] = animationsM;
     }
 
     setAnimation() {
+        const figure = this.scene[this.scene.length - 1];
+
         const rotateX = document.getElementById('rotateXValue').value - 0;
         let xx = document.getElementById('rotateXCenterX').value;
         let xy = document.getElementById('rotateXCenterY').value;
@@ -180,6 +163,7 @@ class Graph3D extends Component {
             x = x === '' ? '' : x - 0;
             y = y === '' ? '' : y - 0;
             z = z === '' ? '' : z - 0;
+            figure.setAnimation('zoom', zoom, new Point(x, y, z));
         }
 
         const animations = [];
@@ -220,12 +204,11 @@ class Graph3D extends Component {
             })
             figure.animated = true;
         }
-        this.changedFigure = false;
     }
 
     canDoAnimation() {
         this.canAnimate = document.getElementById('doAnimation').checked;
-        if (!this.canAnimate && !this.addedAnims) {
+        if (!this.canAnimate) {
             this.scene.forEach(figure => {
                 const animations = [];
                 figure.animations.forEach(anim => {
@@ -242,15 +225,14 @@ class Graph3D extends Component {
                 figure.dropAnimation();
             })
             document.getElementById('addFigureDiv').classList.remove('hide');
-            this.addedAnims = true;
-        } else if(this.canAnimate) {
+        } else {
             this.sceneAnimations.forEach((anim, i) => {
                 this.scene[i].animations = anim;
             })
             this.sceneAnimations = [];
             document.getElementById('addFigureDiv').classList.add('hide');
-            this.addedAnims = false;
         }
+        console.log(this.scene, this.sceneAnimations);
     }
 
     /* ************** */
@@ -267,15 +249,16 @@ class Graph3D extends Component {
             new Light(10, -20, -10, 5000, '#0000ff'),
         ];
         this.scene = [];
-        this.sceneAnimations = [];
+        this.solarSystem = new Figure();
 
         this.canAnimate = false;
+        this.doAnimation();
     }
 
     addFigure = () => {
         this.setAnimation();
         this.scene.push(new Figure());
-        this.figureSettings.hide();
+        document.getElementById('figureSettings').classList.add('hide');
         document.querySelectorAll('.figureAnimCenter').forEach(elem => elem.value = '');
     }
 
@@ -300,100 +283,150 @@ class Graph3D extends Component {
     /* ************************** */
 
     figureChangeHandler = (event) => {
-        if (!this.changedFigure) {
-            let figure = new Figure();
-            const type = event.target.value;
-            switch (type) {
-                case 'solarSystem': {
-                    this.setSolarSystem();
-                    this.figureSettings.hide();
-                    break;
-                }
-                case 'cube': {
-                    figure = new Cube();
-                    this.ui3D.figureChangeParamsVisiblity(0);
-                    break;
-                }
-                case 'sphere': {
-                    figure = new Sphere();
-                    this.ui3D.figureChangeParamsVisiblity(1);
-                    break;
-                }
-                case 'ellipsoid': {
-                    figure = new Ellipsoid();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
-                case 'cone': {
-                    figure = new Cone();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
-                case 'hyperboloid1': {
-                    figure = new Hyperboloid1();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
-                case 'hyperboloid2': {
-                    figure = new Hyperboloid2();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
-                case 'paraboloidHyp': {
-                    figure = new ParaboloidHyp();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
-                case 'paraboloidEll': {
-                    figure = new ParaboloidEll();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
-                case 'cylinderEll': {
-                    figure = new CylinderEll();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
-                case 'cylinderHyp': {
-                    figure = new CylinderHyp();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
-                case 'cylinderPar': {
-                    figure = new CylinderPar();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
-                case 'torus': {
-                    figure = new Torus();
-                    this.ui3D.figureChangeParamsVisiblity(3);
-                    break;
-                }
+        let figure = new Figure();
+        const type = event.target.value;
+        switch (type) {
+            case 'solarSystem': {
+                this.setSolarSystem();
+                document.getElementById('figureSettings').classList.add('hide');
+                break;
             }
-
-            if (type != 'solarSystem') {
-                if (this.scene.length != 0)
-                    this.scene[this.scene.length - 1] = figure;
-                else this.scene.push(figure);
-                this.figureSettings.show();
+            case 'cube': {
+                figure = new Cube();
+                this.figureChangeParamsVisiblity(0);
+                break;
             }
-
-            const count = document.getElementById('figureCount').value - 0;
-            if (count) this.figureCountChange(count);
-
-            const color = document.getElementById('figureColor').value;
-            if (color) this.figureColorChange(color);
-
-            document.querySelectorAll('.figureParam').forEach(elem => elem.value = '');
-
-            this.canChangeScene = false;
-
-            this.changedFigure = true;
+            case 'sphere': {
+                figure = new Sphere();
+                this.figureChangeParamsVisiblity(1);
+                break;
+            }
+            case 'ellipsoid': {
+                figure = new Ellipsoid();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
+            case 'cone': {
+                figure = new Cone();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
+            case 'hyperboloid1': {
+                figure = new Hyperboloid1();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
+            case 'hyperboloid2': {
+                figure = new Hyperboloid2();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
+            case 'paraboloidHyp': {
+                figure = new ParaboloidHyp();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
+            case 'paraboloidEll': {
+                figure = new ParaboloidEll();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
+            case 'cylinderEll': {
+                figure = new CylinderEll();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
+            case 'cylinderHyp': {
+                figure = new CylinderHyp();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
+            case 'cylinderPar': {
+                figure = new CylinderPar();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
+            case 'torus': {
+                figure = new Torus();
+                this.figureChangeParamsVisiblity(3);
+                break;
+            }
         }
+
+        if (type != 'solarSystem') {
+            if (this.scene.length != 0)
+                this.scene[this.scene.length - 1] = figure;
+            else this.scene.push(figure);
+            document.getElementById('figureSettings').classList.remove('hide');
+        }
+
+        const count = document.getElementById('figureCount').value - 0;
+        if (count) this.figureCountChange(count);
+
+        const color = document.getElementById('figureColor').value;
+        if (color) this.figureColorChange(color);
+
+        document.querySelectorAll('.figureParam').forEach(elem => elem.value = '');
+
+        this.canChangeScene = false;
+    }
+
+    figureChangeParamsVisiblity(num) {
+        const a = document.getElementById('figureA');
+        const b = document.getElementById('figureB');
+        const c = document.getElementById('figureC');
+        a.classList.add('hide');
+        b.classList.add('hide');
+        c.classList.add('hide');
+        if (num >= 1) {
+            a.classList.remove('hide');
+        }
+        if (num >= 2) {
+            b.classList.remove('hide');
+        }
+        if (num === 3) {
+            c.classList.remove('hide');
+        }
+    }
+
+    figureChangeParams = () => {
+        let a = document.getElementById('figureA').value - 0;
+        let b = document.getElementById('figureB').value - 0;
+        let c = document.getElementById('figureC').value - 0;
+        a = a ? a : 5;
+        b = b ? b : 5;
+        c = c ? c : 5;
+
+        let count = document.getElementById('figureCount').value - 0;
+        count = count ? count : 10;
+        this.figureCountChange(count, a, b, c);
+
+        const color = document.getElementById('figureColor').value;
+        if (color) this.figureColorChange(color);
+    }
+
+    figureColorChangeHandler = (event) => {
+        const color = event.target.value;
+        if (color) this.figureColorChange(color);
     }
 
     figureColorChange = (color) => {
         this.scene[this.scene.length - 1].polygons.forEach(polygon => polygon.color = polygon.hexToRgb(color));
+    }
+
+    figureCountChangeHandler = (event) => {
+        let a = document.getElementById('figureA').value - 0;
+        let b = document.getElementById('figureB').value - 0;
+        let c = document.getElementById('figureC').value - 0;
+        a = a ? a : 5;
+        b = b ? b : 5;
+        c = c ? c : 5;
+
+        const count = event.target.value - 0;
+        if (count) this.figureCountChange(count, a, b, c);
+
+        const color = document.getElementById('figureColor').value;
+        if (color) this.figureColorChange(color);
     }
 
     figureCountChange = (count, a = 5, b = 5, c = 5) => {
@@ -531,38 +564,23 @@ class Graph3D extends Component {
         this.canvas.clear('#C7CFFF');
     }
 
-    printScene(scene) {
+    printScene(figure) {
         if (this.canPrintPolygons) {
-            const polygons = [];
-            scene.forEach(figure => {
-                this.math3D.calcCenters(figure);
-                this.math3D.calcRadius(figure);
-                this.math3D.calcDistance(figure, this.WIN.camera, 'distance');
+            this.math3D.calcCenters(figure);
+            this.math3D.calcRadius(figure);
+            this.math3D.calcDistance(figure, this.WIN.camera, 'distance');
+            this.math3D.sortByArtistAlgorythm(figure.polygons);
 
-                if (figure.constructor.name === ('Sphere' || 'Ellipsoid')) {
-                    this.math3D.calcCenter(figure);
-                    this.math3D.changePolygonVisiblity(figure);
-                }
+            if (figure.constructor.name === ('Sphere' || 'Ellipsoid')) {
+                this.math3D.changePolygonVisiblity(figure);
+            }
 
-                figure.polygons.forEach(poly => polygons.push(poly));
-            })
-            this.math3D.sortByArtistAlgorythm(polygons);
-
-            polygons.forEach(polygon => {
-                this.LIGHT.forEach((light, i) => {
-                    const distance = Math.sqrt(Math.pow(light.x - polygon.center.x, 2) +
-                        Math.pow(light.y - polygon.center.y, 2) +
-                        Math.pow(light.z - polygon.center.z, 2));
-                    polygon.lumen[i] = this.math3D.calcIllumination(distance, light.lumen);
-                })
-            })
-
-            polygons.forEach(polygon => {
+            figure.polygons.forEach(polygon => {
                 if (polygon.visible) {
                     let { r, g, b } = polygon.color;
                     let R = 0, G = 0, B = 0;
 
-                    this.LIGHT.forEach((light, i) => {
+                    this.LIGHT.forEach(light => {
                         const rLight = light.color.r;
                         const gLight = light.color.g;
                         const bLight = light.color.b;
@@ -570,7 +588,7 @@ class Graph3D extends Component {
                             Math.pow(light.y - polygon.center.y, 2) +
                             Math.pow(light.z - polygon.center.z, 2));
 
-                        const { isShadow, dark } = this.canPrintShadows ? this.math3D.calcShadow(polygon, this.scene, light, i) : { isShadow: false, dark: 1 };
+                        const { isShadow, dark } = this.canPrintShadows ? this.math3D.calcShadow(polygon, this.scene, light) : { isShadow: false, dark: 1 };
                         const lumen = this.math3D.calcIllumination(distance, light.lumen * (isShadow ? dark : 1));
 
                         R += Math.round(r * lumen + rLight * lumen);
@@ -583,9 +601,7 @@ class Graph3D extends Component {
                     B = B > 255 ? 255 : B;
 
                     const points = [];
-                    polygon.points.forEach(num => {
-                        points.push(scene[polygon.figureIndex].points[num])
-                    });
+                    polygon.points.forEach(num => points.push(figure.points[num]));
                     this.canvas.polygon(
                         points.map(point => {
                             return {
@@ -600,31 +616,47 @@ class Graph3D extends Component {
         }
 
         if (this.canPrintEdges) {
-            scene.forEach(figure => {
-                figure.edges.forEach(edge =>
-                    this.canvas.line(
-                        this.math3D.xs(figure.points[edge.p1]), this.math3D.ys(figure.points[edge.p1]),
-                        this.math3D.xs(figure.points[edge.p2]), this.math3D.ys(figure.points[edge.p2]),
-                    )
-                );
-            })
+            figure.edges.forEach(edge =>
+                this.canvas.line(
+                    this.math3D.xs(figure.points[edge.p1]), this.math3D.ys(figure.points[edge.p1]),
+                    this.math3D.xs(figure.points[edge.p2]), this.math3D.ys(figure.points[edge.p2]),
+                )
+            );
         }
 
         if (this.canPrintPoints) {
-            scene.forEach(figure => {
-                figure.points.forEach(point =>
-                    this.canvas.point(
-                        this.math3D.xs(point),
-                        this.math3D.ys(point),
-                        '#337'
-                    ));
-            })
+            figure.points.forEach(point =>
+                this.canvas.point(
+                    this.math3D.xs(point),
+                    this.math3D.ys(point),
+                    '#337'
+                ));
         }
+    }
+
+    makeOneFigure(scene) {
+        const figure = new Figure();
+        scene.forEach(sceneFigure => {
+            sceneFigure.edges.forEach(edge => {
+                const p1 = edge.p1 + figure.points.length;
+                const p2 = edge.p2 + figure.points.length;
+                figure.edges.push(new Edge(p1, p2));
+            });
+            sceneFigure.polygons.forEach(polygon => {
+                const points = [];
+                polygon.points.forEach(point => {
+                    points.push(point + figure.points.length);
+                })
+                figure.polygons.push(new Polygon(points, sceneFigure.polygons[0].color));
+            });
+            sceneFigure.points.forEach(point => figure.points.push(point));
+        });
+        return figure;
     }
 
     renderScene() {
         this.clear();
-        this.printScene(this.scene);
+        this.printScene(this.makeOneFigure(this.scene));
         this.canvas.textCanvas(this.FPS + ' FPS', 10, 30);
 
         this.canvas.render();
@@ -641,13 +673,17 @@ class Graph3D extends Component {
         document.getElementById('printPolygons').addEventListener('click', this.changePrintPolygons);
         document.getElementById('printPolygons').checked = true;
 
+        document.getElementById('figureColor').addEventListener('keyup', (event) => this.figureColorChangeHandler(event));
+        document.getElementById('figureCount').addEventListener('input', this.figureCountChangeHandler);
+
+        document.querySelectorAll('.figureParam').forEach(input => input.addEventListener('input', this.figureChangeParams));
+
         document.getElementById('clearScene').addEventListener('click', this.clearScene);
 
         document.getElementById('changeScene').addEventListener('click', this.changeScene);
 
         document.getElementById('addFigure').addEventListener('click', this.addFigure);
 
-        document.getElementById('doAnimation').addEventListener('click', () => this.canDoAnimation());
-        //document.getElementById('doAnimation').checked = true;
+        document.getElementById('doAnimation').checked = true;
     }
 }

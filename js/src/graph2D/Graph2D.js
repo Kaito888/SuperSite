@@ -29,7 +29,7 @@ class Graph2D extends Component {
         const ui = new UI({ addFunction, delFunction, setColorFunction, changeZeroAndDerivative, deleteZeroAndDerevative, changeGraph, changeZero });
 
         const canvas = new Canvas({
-            id: 'canvas2D',
+            id: 'graph2D',
             width: 800,
             height: 800,
             WIN,
@@ -198,8 +198,6 @@ class Graph2D extends Component {
                 }
                 x += dx;
             }
-
-            canvas.render();
         }
 
         function pritSquareCursor(event) {
@@ -228,7 +226,7 @@ class Graph2D extends Component {
                     const k = getDerivative(f, x0);
                     const b = f(x0) - k * x0;
                     derivative.f = (x) => k * x + b;
-                    printFunction(derivative.f, derivative.color, 2);
+                    printFunction(derivative.f, derivative.color, 2)
                 }
             });
         }

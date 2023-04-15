@@ -1,5 +1,5 @@
 Template.prototype.Graph2DTemplate = () => `
-<div class="content-item" id="graph2D">
+<div class="content-item" id="graph">
     <div>
         <button id="popUpOpen" class="button">Настроить графики</button>
     </div>
@@ -17,6 +17,6 @@ Template.prototype.Graph2DTemplate = () => `
             </p>
         </p>
     </div>
-    <canvas id='canvas2D'></canvas>
+    <canvas id='graph2D'></canvas>
 </div>
 `

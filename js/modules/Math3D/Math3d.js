@@ -126,9 +126,7 @@ class Math3D {
             z += point.z;
         })
         const s = figure.points.length;
-        figure.center.x = x / s;
-        figure.center.y = y / s;
-        figure.center.z = z / s;
+        figure.center = new Point(x / s, y / s, z / s);
     }
 
     calcCenters(figure) {
@@ -200,7 +198,7 @@ class Math3D {
         });
     }
 
-    calcShadow(polygon, figures, light, index) {
+    calcShadow(polygon, figures, light) {
         const M1 = polygon.center;
         const r = polygon.R;
         const s = this.calcVector(M1, light);
@@ -211,7 +209,7 @@ class Math3D {
             for (let j = 0; j < figures[i].polygons.length; j++) {
                 const polygon2 = figures[i].polygons[j];
                 const M0 = polygon2.center;
-                if (polygon.lumen[index] > polygon2.lumen[index]) {
+                if (polygon.lumen > polygon2.lumen) {
                     continue;
                 }
                 const moduleS = this.calcVectorModule(s);
@@ -219,7 +217,7 @@ class Math3D {
                 if (dark < r) {
                     return {
                         isShadow: true,
-                        dark: dark * 2,
+                        dark: dark / 2,
                     };
                 }
             }
